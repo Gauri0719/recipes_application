@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:recipes_application/recipe_detail_page.dart';
 import 'package:recipes_application/see_all_page.dart';
 import 'package:recipes_application/sign_in_page.dart';
 import 'package:recipes_application/widgets/video_page.dart';
 
+import 'Catergories_ewidget.dart';
 import 'bookmarked_page.dart';
+import 'controller/category_controller.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,7 +17,7 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
+final CategoryController categoryController = Get.put(CategoryController());
 class _HomePageState extends State<HomePage> {
   List<Map<String, String>> bookmarkedVideos = [];
   int _selectedCategoryIndex = 0; // Track the selected category
@@ -191,37 +194,142 @@ class _HomePageState extends State<HomePage> {
 
                   // Category Row
                   // Category Row (Now Clickable)
-                  SizedBox(
-                    height: 50,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedCategoryIndex = index;
-                            });
-                          },
-                          child: _categoryItem(categories[index], _selectedCategoryIndex == index),
-                        );
-                      },
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: categories.map((category) {
+                      return Obx(() => GestureDetector(
+                        onTap: () => categoryController.updateCategory(category),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: categoryController.selectedCategory.value == category
+                                ? Colors.red
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              color: categoryController.selectedCategory.value == category
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ));
+                    }).toList(),
                   ),
 
                   SizedBox(height: 20),
 
+                  // DYNAMICALLY UPDATED RECIPE CARDS
                   SizedBox(
-                    height: 200,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
+                    height: 200, // Adjust height based on card size
+                    child: Obx(() {
+                      return ListView.separated(
+                        scrollDirection: Axis.horizontal, // Horizontal scrolling
+                        itemCount: categoryController.recipes.length,
+                        separatorBuilder: (context, index) => SizedBox(width: 16), // Even spacing
+                        itemBuilder: (context, index) {
+                          final recipe = categoryController.recipes[index];
+                          return Container(
+                            width: 160, // Card width
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 5,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Image
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.asset(
+                                    recipe["image"]!,
+                                    width: double.infinity,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+
+                                // Recipe Name
+                                Text(
+                                  recipe["name"]!,
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
+                                SizedBox(height: 4),
+
+                                // Time & Bookmark Row
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "⏳${recipe["time"]}",
+                                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                    Icon(FontAwesomeIcons.bookmark, color: Colors.grey,size: 15.0,),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    }),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Image.asset("assets/images/Food Photo.png"),
-                        SizedBox(width: 10),
-                        Image.asset("assets/images/Food Photo (1).png"),
+                        Text(
+                          "Recent Recipes",
+                          style: TextStyle(
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.start,
+                        ),
+
+                        Row(
+                          children: [
+                            Text("See all",style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,color: Colors.red),
+                            ),
+                            Icon(FontAwesomeIcons.arrowRight,color: Colors.red,)
+                          ],
+                        )
                       ],
                     ),
                   ),
+                  Row(
+                    children: [
+                      Column(
+                        children: [
+                          Image.asset()
+                        ],
+                      )
+                    ],
+                  )
+
                 ],
               ),
             ),
@@ -305,3 +413,5 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+
